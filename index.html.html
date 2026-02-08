@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Naz</title>
+    <style>
+        /* --- GENEL AYARLAR (MOBİL UYUMLU) --- */
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background-color: #000;
+            overflow: hidden;
+            font-family: 'Courier New', Courier, monospace;
+            -webkit-tap-highlight-color: transparent; /* Mobilde tıklama rengini kapat */
+        }
+        
+        .screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 10; transition: opacity 1s ease;
+        }
+        
+        .hidden { display: none !important; opacity: 0; pointer-events: none; }
+
+        /* --- 1. GİRİŞ EKRANI --- */
+        #intro-screen { background-color: black; cursor: pointer; z-index: 50; }
+        
+        #intro-image {
+            width: 80%; max-width: 400px; /* Mobilde taşmasın */
+            border-radius: 20px; border: 2px solid #fff;
+            box-shadow: 0 0 30px #ff0055, 0 0 60px #ff0055;
+            animation: breathe 3s infinite ease-in-out;
+        }
+        
+        .hint {
+            position: absolute; bottom: 15%; color: white; opacity: 0.8;
+            font-size: 1.2rem; letter-spacing: 2px;
+            animation: blink 2s infinite; text-align: center; width: 100%;
+            text-shadow: 0 0 10px black;
+        }
+
+        /* --- 2. SORU ve FİNAL EKRANI --- */
+        #question-screen {
+            background-image: url('naz2.jpg');
+            background-size: cover; background-position: center; 
+            background-repeat: no-repeat;
+            z-index: 5;
+            transition: background-image 1s ease-in-out;
+        }
+        
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); z-index: 1; transition: all 1s ease;
+        }
+
+        /* Soru Kutusu (Mobilde daha dar) */
+        .content-box {
+            position: relative; z-index: 10; text-align: center;
+            background: rgba(0, 0, 0, 0.7); padding: 30px;
+            border-radius: 20px; border: 1px solid rgba(255, 0, 85, 0.5);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            width: 85%; max-width: 500px;
+        }
+
+        h2 { 
+            color: white; font-size: 1.5rem; margin-bottom: 25px; 
+            text-shadow: 0 0 10px #ff0055; line-height: 1.4;
+        }
+
+        .btn-container { display: flex; gap: 15px; justify-content: center; }
+        
+        .btn {
+            padding: 15px 30px; font-size: 1.1rem; background: rgba(0, 0, 0, 0.5);
+            color: white; border: 2px solid #ff0055; border-radius: 30px;
+            cursor: pointer; transition: all 0.2s; font-family: inherit;
+            -webkit-appearance: none; /* iPhone buton stili düzeltme */
+        }
+        .btn:active { transform: scale(0.95); background: #ff0055; }
+
+        /* --- DAKTİLO YAZISI (FİNAL) --- */
+        #typewriter-text {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #fff; font-size: 1.5rem; text-align: center; z-index: 30;
+            text-shadow: 0 0 10px #ff0055; width: 90%;
+            font-weight: bold; line-height: 1.6;
+        }
+        
+        /* MOBİL İÇİN ÖZEL AYARLAR */
+        @media only screen and (max-width: 600px) {
+            h2 { font-size: 1.3rem; }
+            #intro-image { width: 90%; }
+            #typewriter-text { font-size: 1.2rem; width: 95%; }
+            .btn { padding: 12px 25px; font-size: 1rem; }
+        }
+
+        /* --- DİĞER EFEKTLER --- */
+        #error-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 60;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; padding: 20px;
+        }
+        #error-modal h1 { color: red; font-size: 2rem; margin-bottom: 20px; }
+        #error-modal p { color: white; font-size: 1.2rem; margin-bottom: 40px; }
+
+        /* Havai Fişek ve Kalpler */
+        #fireworks-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+        .firework-particle { position: absolute; width: 5px; height: 5px; border-radius: 50%; }
+        #heart-container { pointer-events: none; }
+        .heart {
+            position: absolute; width: 15px; height: 15px; background-color: #ff0055;
+            transform: rotate(45deg); box-shadow: 0 0 10px #ff0055;
+            transition: all 2.5s cubic-bezier(0.19, 1, 0.22, 1); z-index: 20;
+        }
+        .heart::before, .heart::after { content: ""; position: absolute; width: 15px; height: 15px; background-color: #ff0055; border-radius: 50%; }
+        .heart::before { top: -8px; left: 0; } .heart::after { left: -8px; top: 0; }
+        
+        /* Tıklama Katmanı */
+        #click-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 15; cursor: pointer; display: none; }
+        
+        /* Müzik (Gizli) */
+        #player-container { position: absolute; top: -9999px; left: -9999px; }
+
+        @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+        @keyframes explode { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <div id="intro-screen" class="screen" onclick="startShow()">
+        <img src="kalp.jpg" id="intro-image" onerror="this.src='kalp.jpeg'" alt="Resim yüklenemedi.">
+        <div class="hint">Dünyanın En Güzel Gülüşüne Sahip Kadının Fotoğrafına Tıkla...</div>
+    </div>
+
+    <div id="heart-container"></div>
+    <div id="click-layer" onclick="goToQuestion()"></div>
+    <div id="fireworks-container"></div>
+
+    <div id="question-screen" class="screen hidden">
+        <div class="overlay"></div>
+        <div class="content-box" id="question-box">
+            <h2>Güzel Gülüşün Güzel Yüzünde Her Zaman Kalacak Mı?</h2>
+            <div class="btn-container">
+                <button class="btn" onclick="handleYes()">Evet</button>
+                <button class="btn" onclick="handleNo()">Hayır</button>
+            </div>
+        </div>
+        <div id="typewriter-text" class="hidden"><span id="typed-content"></span></div>
+    </div>
+
+    <div id="error-modal" class="hidden">
+        <h1>YANLIŞ SEÇİM!</h1>
+        <p>Ulaş Senin Yüzünü Her Zaman Güldürür!!!</p>
+        <button class="btn" onclick="closeError()">Tamam</button>
+    </div>
+
+    <div id="player-container"></div>
+
+    <script>
+        const container = document.getElementById('heart-container');
+        const hearts = [];
+        const points = [{x:-200,y:100},{x:-200,y:70},{x:-200,y:40},{x:-200,y:10},{x:-200,y:-20},{x:-200,y:-50},{x:-200,y:-80},{x:-200,y:-110},{x:-180,y:-80},{x:-160,y:-50},{x:-140,y:-20},{x:-120,y:10},{x:-100,y:100},{x:-100,y:70},{x:-100,y:40},{x:-100,y:10},{x:-100,y:-20},{x:-100,y:-50},{x:-100,y:-80},{x:-100,y:-110},{x:-40,y:100},{x:-30,y:70},{x:-20,y:40},{x:-10,y:10},{x:0,y:-20},{x:10,y:-50},{x:20,y:-80},{x:30,y:-110},{x:100,y:100},{x:90,y:70},{x:80,y:40},{x:70,y:10},{x:60,y:-20},{x:50,y:-50},{x:40,y:-80},{x:-10,y:10},{x:10,y:10},{x:30,y:10},{x:50,y:10},{x:70,y:10},{x:160,y:-110},{x:180,y:-110},{x:200,y:-110},{x:220,y:-110},{x:240,y:-110},{x:260,y:-110},{x:240,y:-80},{x:220,y:-50},{x:200,y:-20},{x:180,y:10},{x:160,y:40},{x:140,y:70},{x:140,y:100},{x:160,y:100},{x:180,y:100},{x:200,y:100},{x:220,y:100},{x:240,y:100},{x:260,y:100}];
+
+        function initHearts() {
+            points.forEach(point => {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heart.style.left = Math.random()*window.innerWidth+'px';
+                heart.style.top = Math.random()*window.innerHeight+'px';
+                heart.dataset.targetX = point.x; heart.dataset.targetY = point.y;
+                container.appendChild(heart); hearts.push(heart);
+            });
+        }
+
+        function startShow() {
+            // Müzik: YouTube Iframe API yerine doğrudan autoplay parametresi ile inject ediyoruz.
+            // Bu işlem "click" eventinin içinde olduğu için mobilde çalışır.
+            const playerDiv = document.getElementById('player-container');
+            playerDiv.innerHTML = '<iframe width="1" height="1" src="https://www.youtube.com/embed/WLzk9F4a9rs?autoplay=1&start=49&rel=0&playsinline=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+
+            const intro = document.getElementById('intro-screen');
+            intro.style.opacity = '0';
+            setTimeout(() => {
+                intro.style.display = 'none';
+                alignHearts();
+                setTimeout(() => { document.getElementById('click-layer').style.display = 'block'; }, 2500);
+            }, 1000);
+        }
+
+        function alignHearts() {
+            const cx = window.innerWidth/2, cy = window.innerHeight/2;
+            // Mobilde harfleri biraz küçült (scale)
+            const scale = window.innerWidth < 600 ? 0.8 : 1.3;
+            
+            hearts.forEach(h => {
+                // Mobilde harfleri ekrana sığdırmak için koordinatları daralt
+                const factor = window.innerWidth < 600 ? 0.6 : 1;
+                
+                h.style.left = (cx + (parseInt(h.dataset.targetX) * factor) - (window.innerWidth < 600 ? 10 : 30))+'px';
+                h.style.top = (cy + (parseInt(h.dataset.targetY) * factor))+'px';
+                h.style.transform = `rotate(45deg) scale(${scale})`;
+            });
+        }
+
+        function goToQuestion() {
+            container.style.opacity = '0';
+            document.getElementById('click-layer').style.display = 'none';
+            document.getElementById('question-screen').classList.remove('hidden');
+        }
+
+        function handleNo() { document.getElementById('error-modal').classList.remove('hidden'); }
+        function closeError() { document.getElementById('error-modal').classList.add('hidden'); }
+
+        function handleYes() {
+            document.getElementById('question-box').style.display = 'none';
+            document.getElementById('question-screen').style.backgroundImage = "url('naz3.jpg')";
+            document.querySelector('.overlay').style.backgroundColor = 'rgba(0,0,0,0.6)';
+            
+            setInterval(launchFirework, 600);
+            setTimeout(() => {
+                typeWriter("Şarkının Sözlerinde de Dediği Gibi \n KAL, KAL, KAL, \n HEP YANIMDA KAL...");
+            }, 500);
+        }
+
+        function typeWriter(text) {
+            const typeContainer = document.getElementById('typewriter-text');
+            const typedContent = document.getElementById('typed-content');
+            typeContainer.classList.remove('hidden');
+            let i = 0;
+            function typing() {
+                if (i < text.length) {
+                    const char = text.charAt(i);
+                    typedContent.innerHTML += char === '\n' ? '<br>' : char;
+                    i++;
+                    setTimeout(typing, 80);
+                }
+            }
+            typing();
+        }
+
+        function launchFirework() {
+            const container = document.getElementById('fireworks-container');
+            const x = Math.random() * window.innerWidth;
+            const y = Math.random() * (window.innerHeight / 2);
+            const colors = ['#ff0055', '#ffdd00', '#00ddff', '#fff'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'firework-particle';
+                particle.style.backgroundColor = color;
+                particle.style.left = x + 'px'; particle.style.top = y + 'px';
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 100 + 40;
+                particle.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
+                particle.style.setProperty('--ty', Math.sin(angle) * distance + 'px');
+                particle.style.animation = 'explode 1.2s ease-out forwards';
+                container.appendChild(particle);
+                setTimeout(() => particle.remove(), 1200);
+            }
+        }
+
+        window.onload = initHearts;
+    </script>
+</body>
+</html>
