@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Naz</title>
     <style>
-        /* --- GENEL AYARLAR (MOBİL UYUMLU) --- */
+        /* --- GENEL AYARLAR --- */
         body, html {
             margin: 0; padding: 0;
             width: 100%; height: 100%;
             background-color: #000;
             overflow: hidden;
             font-family: 'Courier New', Courier, monospace;
-            -webkit-tap-highlight-color: transparent; /* Mobilde tıklama rengini kapat */
+            -webkit-tap-highlight-color: transparent;
         }
         
         .screen {
@@ -28,7 +28,7 @@
         #intro-screen { background-color: black; cursor: pointer; z-index: 50; }
         
         #intro-image {
-            width: 80%; max-width: 400px; /* Mobilde taşmasın */
+            width: 80%; max-width: 400px;
             border-radius: 20px; border: 2px solid #fff;
             box-shadow: 0 0 30px #ff0055, 0 0 60px #ff0055;
             animation: breathe 3s infinite ease-in-out;
@@ -55,7 +55,6 @@
             background: rgba(0, 0, 0, 0.6); z-index: 1; transition: all 1s ease;
         }
 
-        /* Soru Kutusu (Mobilde daha dar) */
         .content-box {
             position: relative; z-index: 10; text-align: center;
             background: rgba(0, 0, 0, 0.7); padding: 30px;
@@ -75,11 +74,10 @@
             padding: 15px 30px; font-size: 1.1rem; background: rgba(0, 0, 0, 0.5);
             color: white; border: 2px solid #ff0055; border-radius: 30px;
             cursor: pointer; transition: all 0.2s; font-family: inherit;
-            -webkit-appearance: none; /* iPhone buton stili düzeltme */
         }
         .btn:active { transform: scale(0.95); background: #ff0055; }
 
-        /* --- DAKTİLO YAZISI (FİNAL) --- */
+        /* --- DAKTİLO YAZISI --- */
         #typewriter-text {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             color: #fff; font-size: 1.5rem; text-align: center; z-index: 30;
@@ -87,7 +85,6 @@
             font-weight: bold; line-height: 1.6;
         }
         
-        /* MOBİL İÇİN ÖZEL AYARLAR */
         @media only screen and (max-width: 600px) {
             h2 { font-size: 1.3rem; }
             #intro-image { width: 90%; }
@@ -95,7 +92,7 @@
             .btn { padding: 12px 25px; font-size: 1rem; }
         }
 
-        /* --- DİĞER EFEKTLER --- */
+        /* --- DİĞER --- */
         #error-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 60;
@@ -105,7 +102,6 @@
         #error-modal h1 { color: red; font-size: 2rem; margin-bottom: 20px; }
         #error-modal p { color: white; font-size: 1.2rem; margin-bottom: 40px; }
 
-        /* Havai Fişek ve Kalpler */
         #fireworks-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
         .firework-particle { position: absolute; width: 5px; height: 5px; border-radius: 50%; }
         #heart-container { pointer-events: none; }
@@ -117,16 +113,16 @@
         .heart::before, .heart::after { content: ""; position: absolute; width: 15px; height: 15px; background-color: #ff0055; border-radius: 50%; }
         .heart::before { top: -8px; left: 0; } .heart::after { left: -8px; top: 0; }
         
-        /* Tıklama Katmanı */
         #click-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 15; cursor: pointer; display: none; }
         
-        /* Müzik (Gizli) */
-        #player-container { position: absolute; top: -9999px; left: -9999px; }
+        /* Müzik Kutusu (Gizli) */
+        #youtube-player { position: absolute; top: -9999px; left: -9999px; }
 
         @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
         @keyframes explode { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
     </style>
+    <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
 
@@ -157,9 +153,34 @@
         <button class="btn" onclick="closeError()">Tamam</button>
     </div>
 
-    <div id="player-container"></div>
+    <div id="youtube-player"></div>
 
     <script>
+        // --- YOUTUBE API KURULUMU ---
+        var player;
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('youtube-player', {
+                height: '1',
+                width: '1',
+                videoId: 'WLzk9F4a9rs', // Teoman - Kal Şarkısı
+                playerVars: {
+                    'playsinline': 1, // iOS için kritik ayar
+                    'controls': 0,
+                    'start': 49, // 49. saniyeden başla
+                    'disablekb': 1
+                },
+                events: {
+                    'onReady': onPlayerReady
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            // Player hazır ama tıklama bekliyoruz
+            console.log("Müzik hazır, tıklama bekleniyor...");
+        }
+
+        // --- GÖRSEL JS ---
         const container = document.getElementById('heart-container');
         const hearts = [];
         const points = [{x:-200,y:100},{x:-200,y:70},{x:-200,y:40},{x:-200,y:10},{x:-200,y:-20},{x:-200,y:-50},{x:-200,y:-80},{x:-200,y:-110},{x:-180,y:-80},{x:-160,y:-50},{x:-140,y:-20},{x:-120,y:10},{x:-100,y:100},{x:-100,y:70},{x:-100,y:40},{x:-100,y:10},{x:-100,y:-20},{x:-100,y:-50},{x:-100,y:-80},{x:-100,y:-110},{x:-40,y:100},{x:-30,y:70},{x:-20,y:40},{x:-10,y:10},{x:0,y:-20},{x:10,y:-50},{x:20,y:-80},{x:30,y:-110},{x:100,y:100},{x:90,y:70},{x:80,y:40},{x:70,y:10},{x:60,y:-20},{x:50,y:-50},{x:40,y:-80},{x:-10,y:10},{x:10,y:10},{x:30,y:10},{x:50,y:10},{x:70,y:10},{x:160,y:-110},{x:180,y:-110},{x:200,y:-110},{x:220,y:-110},{x:240,y:-110},{x:260,y:-110},{x:240,y:-80},{x:220,y:-50},{x:200,y:-20},{x:180,y:10},{x:160,y:40},{x:140,y:70},{x:140,y:100},{x:160,y:100},{x:180,y:100},{x:200,y:100},{x:220,y:100},{x:240,y:100},{x:260,y:100}];
@@ -175,11 +196,12 @@
             });
         }
 
+        // TIKLAMA FONKSİYONU
         function startShow() {
-            // Müzik: YouTube Iframe API yerine doğrudan autoplay parametresi ile inject ediyoruz.
-            // Bu işlem "click" eventinin içinde olduğu için mobilde çalışır.
-            const playerDiv = document.getElementById('player-container');
-            playerDiv.innerHTML = '<iframe width="1" height="1" src="https://www.youtube.com/embed/WLzk9F4a9rs?autoplay=1&start=49&rel=0&playsinline=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+            // Müzik Başlat (Mobilde tıklama anında tetiklenmeli)
+            if (player && player.playVideo) {
+                player.playVideo();
+            }
 
             const intro = document.getElementById('intro-screen');
             intro.style.opacity = '0';
@@ -192,13 +214,9 @@
 
         function alignHearts() {
             const cx = window.innerWidth/2, cy = window.innerHeight/2;
-            // Mobilde harfleri biraz küçült (scale)
             const scale = window.innerWidth < 600 ? 0.8 : 1.3;
-            
             hearts.forEach(h => {
-                // Mobilde harfleri ekrana sığdırmak için koordinatları daralt
                 const factor = window.innerWidth < 600 ? 0.6 : 1;
-                
                 h.style.left = (cx + (parseInt(h.dataset.targetX) * factor) - (window.innerWidth < 600 ? 10 : 30))+'px';
                 h.style.top = (cy + (parseInt(h.dataset.targetY) * factor))+'px';
                 h.style.transform = `rotate(45deg) scale(${scale})`;
@@ -247,7 +265,6 @@
             const y = Math.random() * (window.innerHeight / 2);
             const colors = ['#ff0055', '#ffdd00', '#00ddff', '#fff'];
             const color = colors[Math.floor(Math.random() * colors.length)];
-
             for (let i = 0; i < 30; i++) {
                 const particle = document.createElement('div');
                 particle.className = 'firework-particle';
